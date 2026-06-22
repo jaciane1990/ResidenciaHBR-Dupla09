@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLogOut, FiUsers, FiTrendingUp, FiFileText, FiCheckCircle, FiAlertTriangle, FiDollarSign, FiBarChart, FiSettings } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiTrendingUp, FiFileText, FiCheckCircle, FiAlertTriangle, FiDollarSign, FiBarChart, FiSettings, FiArrowLeft } from 'react-icons/fi';
 import { useAuth, usePermissions } from '../hooks/useAuth';
 
 export default function DashboardPage() {
@@ -116,26 +116,12 @@ export default function DashboardPage() {
                   <FiCheckCircle className="text-green-500 w-8 h-8" />
                   <h3 className="text-lg font-semibold text-gray-900">Validar Período</h3>
                 </div>
-                <p className="text-gray-600 mb-4">Aprove períodos de pagamento</p>
-                <button
-                  onClick={() => navigate('/validar-periodo')}
-                  className="w-full bg-green-600 text-white py-2 px-4 rounded-xl hover:bg-green-700 transition"
-                >
-                  Validar Período
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <FiBarChart className="text-purple-500 w-8 h-8" />
-                  <h3 className="text-lg font-semibold text-gray-900">Relatórios Fiscais</h3>
-                </div>
                 <p className="text-gray-600 mb-4">Relatórios para aprovação</p>
                 <button
-                  onClick={() => navigate('/relatorios-fiscais')}
-                  className="w-full bg-purple-600 text-white py-2 px-4 rounded-xl hover:bg-purple-700 transition"
+                  onClick={() => navigate('/relatorios')}
+                  className="w-full bg-green-600 text-white py-2 px-4 rounded-xl hover:bg-green-700 transition"
                 >
-                  Ver Relatórios
+                  Ir para Relatórios
                 </button>
               </div>
             </div>
@@ -172,14 +158,14 @@ export default function DashboardPage() {
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center gap-3 mb-4">
                   <FiBarChart className="text-purple-500 w-8 h-8" />
-                  <h3 className="text-lg font-semibold text-gray-900">Dashboards</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Relatórios</h3>
                 </div>
-                <p className="text-gray-600 mb-4">Visualizar estatísticas educacionais</p>
+                <p className="text-gray-600 mb-4">Relatórios educacionais</p>
                 <button
-                  onClick={() => navigate('/estatisticas')}
+                  onClick={() => navigate('/relatorios')}
                   className="w-full bg-purple-600 text-white py-2 px-4 rounded-xl hover:bg-purple-700 transition"
                 >
-                  Ver Dashboards
+                  Ver Relatórios
                 </button>
               </div>
             </div>
@@ -189,32 +175,18 @@ export default function DashboardPage() {
       case 'ADMIN':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center gap-3 mb-4">
                   <FiUsers className="text-blue-500 w-8 h-8" />
-                  <h3 className="text-lg font-semibold text-gray-900">Gerenciar Usuários</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Gerenciar Alunos</h3>
                 </div>
-                <p className="text-gray-600 mb-4">Criar e editar usuários do sistema</p>
+                <p className="text-gray-600 mb-4">Visualizar e gerenciar todos os alunos do sistema</p>
                 <button
-                  onClick={() => navigate('/usuarios')}
+                  onClick={() => navigate('/estudantes')}
                   className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl hover:bg-blue-700 transition"
                 >
-                  Gerenciar Usuários
-                </button>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-                <div className="flex items-center gap-3 mb-4">
-                  <FiSettings className="text-gray-500 w-8 h-8" />
-                  <h3 className="text-lg font-semibold text-gray-900">Sistema</h3>
-                </div>
-                <p className="text-gray-600 mb-4">Configurações do sistema</p>
-                <button
-                  onClick={() => navigate('/configuracoes')}
-                  className="w-full bg-gray-600 text-white py-2 px-4 rounded-xl hover:bg-gray-700 transition"
-                >
-                  Configurações
+                  Acessar Gestão
                 </button>
               </div>
 
@@ -228,8 +200,31 @@ export default function DashboardPage() {
                   onClick={() => navigate('/relatorios')}
                   className="w-full bg-purple-600 text-white py-2 px-4 rounded-xl hover:bg-purple-700 transition"
                 >
-                  Ver Todos
+                  Ver Relatórios
                 </button>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <FiAlertTriangle className="text-orange-500 w-8 h-8" />
+                  <h3 className="text-lg font-semibold text-gray-900">Ocorrências</h3>
+                </div>
+                <p className="text-gray-600 mb-4">Visualizar ocorrências registradas</p>
+                <button
+                  onClick={() => navigate('/ocorrencias')}
+                  className="w-full bg-orange-600 text-white py-2 px-4 rounded-xl hover:bg-orange-700 transition"
+                >
+                  Ver Ocorrências
+                </button>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <FiTrendingUp className="text-green-500 w-8 h-8" />
+                  <h3 className="text-lg font-semibold text-gray-900">Estatísticas do Sistema</h3>
+                </div>
+                <p className="text-3xl font-bold text-gray-900">94.2%</p>
+                <p className="text-sm text-gray-500">Disponibilidade média</p>
               </div>
             </div>
 
@@ -239,7 +234,7 @@ export default function DashboardPage() {
                 {loginHistory.slice(0, 5).map((entry) => (
                   <div key={`${entry.timestamp}-${entry.userId}`} className="rounded-xl border border-gray-200 p-4 bg-gray-50">
                     <div className="flex justify-between items-center gap-2 text-sm text-gray-700">
-                      <span>{entry.userName}</span>
+                      <span>{entry.name}</span>
                       <span>{entry.method}</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{new Date(entry.timestamp).toLocaleString()}</p>
@@ -250,8 +245,6 @@ export default function DashboardPage() {
             </div>
           </div>
         );
-
-      default:
         return <div>Perfil não reconhecido</div>;
     }
   };
@@ -262,9 +255,17 @@ export default function DashboardPage() {
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-600">Bem-vindo, {user?.name}</p>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold"
+              >
+                <FiArrowLeft /> Voltar
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                <p className="text-sm text-gray-600">Bem-vindo, {user?.name}</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">

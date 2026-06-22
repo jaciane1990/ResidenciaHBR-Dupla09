@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FiSearch, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiSearch, FiCheckCircle, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import { MdFingerprint } from 'react-icons/md';
 import { Toaster, toast } from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
@@ -15,6 +16,7 @@ interface ScannedStudent {
 
 export default function OperatorPage() {
   const { user, logReleaseAction } = useAuth();
+  const navigate = useNavigate();
   const [viewState, setViewState] = useState<'IDLE' | 'SCANNING' | 'RESULT'>('IDLE');
   const [student, setStudent] = useState<ScannedStudent | null>(null);
   const [manualSearch, setManualSearch] = useState('');
@@ -102,9 +104,17 @@ export default function OperatorPage() {
       
       <div className="max-w-4xl mx-auto">
         <header className="mb-8 flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Validação de Refeição</h1>
-            <p className="text-slate-500">Escola Municipal de Tecnologia</p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold"
+            >
+              <FiArrowLeft /> Voltar
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">Validação de Refeição</h1>
+              <p className="text-slate-500">Escola Municipal de Tecnologia</p>
+            </div>
           </div>
           <div className="text-right">
             <span className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Operador</span>

@@ -2,6 +2,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCheckCircle, FiXCircle, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { Student } from '../types/student';
+import { usePermissions } from '../hooks/useAuth';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const STORAGE_KEY = 'student-management-list';
 
@@ -19,19 +21,21 @@ const loadStudents = (): Student[] => {
 export default function StudentDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasRole } = usePermissions();
   const students = useMemo(() => loadStudents(), [id]);
   const student = students.find((item) => item.id === id);
   const [biometrics, setBiometrics] = useState<string[]>(student?.biometrics ?? []);
   const [newBiometricCode, setNewBiometricCode] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const validateHexCode = (code: string): boolean => {
-    return /^[A-Fa-f0-9]{12}$/.test(code);
+    return /^[A-Fa-f0-9]{24}$/.test(code);
   };
 
   const handleAddBiometric = () => {
     if (!newBiometricCode.trim()) return;
     if (!validateHexCode(newBiometricCode)) {
-      alert('Código biométrico deve ter exatamente 12 caracteres hexadecimais (0-9, A-F).');
+      alert('Código biométrico deve ter exatamente 24 caracteres hexadecimais (0-9, A-F).');
       return;
     }
     if (biometrics.includes(newBiometricCode.toUpperCase())) {
@@ -59,13 +63,28 @@ export default function StudentDetailPage() {
     alert('Códigos biométricos salvos com sucesso!');
   };
 
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!student) return;
+    const updatedStudents = students.filter(s => s.id !== student.id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStudents));
+    navigate('/estudantes');
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
+  };
+
   if (!student) {
     return (
       <div className="p-8 min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="max-w-2xl w-full bg-white rounded-3xl p-10 shadow-sm border border-slate-200 text-center">
           <p className="text-slate-500 mb-6">Estudante não encontrado. Verifique se o registro ainda existe ou volte para a lista.</p>
           <button
-            onClick={() => navigate('/estudantes')}
+            onClick={() => navigate(-1)}
             className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-semibold hover:bg-blue-700 transition"
           >
             Voltar para Lista
@@ -81,7 +100,7 @@ export default function StudentDetailPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <button
-              onClick={() => navigate('/estudantes')}
+              onClick={() => navigate(-1)}
               className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold"
             >
               <FiArrowLeft /> Voltar
@@ -89,6 +108,14 @@ export default function StudentDetailPage() {
             <h1 className="text-3xl font-bold text-slate-800 mt-4">Detalhes do Estudante</h1>
             <p className="text-slate-500">Visualize as informações completas do aluno.</p>
           </div>
+          {(hasRole('GESTOR') || hasRole('ADMIN')) && (
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-2xl hover:bg-red-700 transition font-semibold"
+            >
+              <FiTrash2 /> Excluir Estudante
+            </button>
+          )}
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -175,9 +202,9 @@ export default function StudentDetailPage() {
                       type="text"
                       value={newBiometricCode}
                       onChange={(e) => setNewBiometricCode(e.target.value.toUpperCase())}
-                      placeholder="Digite código hexadecimal (12 caracteres)"
+                      placeholder="Digite código hexadecimal (24 caracteres)"
                       className="flex-1 px-4 py-2 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      maxLength={12}
+                      maxLength={24}
                     />
                     <button
                       onClick={handleAddBiometric}
@@ -206,6 +233,17 @@ export default function StudentDetailPage() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Excluir Estudante"
+        message={`Tem certeza que deseja excluir o estudante ${student?.name}? Esta ação não pode ser desfeita.`}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 }

@@ -1,10 +1,11 @@
-﻿import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiUpload, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiUpload, FiSearch, FiArrowLeft } from 'react-icons/fi';
 import { Student } from '../types/student';
 import StudentForm from '../components/StudentForm';
 import StudentTable from '../components/StudentTable';
 import CsvImportModal from '../components/CsvImportModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { usePermissions } from '../hooks/useAuth';
 
 const STORAGE_KEY = 'student-management-list';
@@ -19,7 +20,7 @@ const initialStudents: Student[] = [
     grade: '3º A',
     status: 'ACTIVE',
     hasBiometry: true,
-    biometrics: ['ABC123DEF456', 'DEF789GHI012'],
+    biometrics: ['ABC123DEF456ABC123DEF456', 'DEF789GHI012DEF789GHI012'],
     photoUrl: 'https://i.pravatar.cc/150?img=11',
   },
   {
@@ -70,6 +71,8 @@ export default function StudentsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
@@ -92,7 +95,7 @@ export default function StudentsPage() {
     });
   }, [students, searchTerm, courseFilter, gradeFilter, statusFilter]);
 
-  const handleSaveStudent = (student: Partial<Student>) => {
+  const handleSaveStudent = useCallback((student: Partial<Student>) => {
     const updatedStudent: Student = {
       id: student.id ?? createId(),
       registration: student.registration?.trim() ?? '',
@@ -115,31 +118,49 @@ export default function StudentsPage() {
       }
       return [updatedStudent, ...prev];
     });
-  };
+  }, []);
 
-  const handleEdit = (student: Student) => {
+  const handleEdit = useCallback((student: Student) => {
     setEditingStudent(student);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleToggleStatus = (student: Student) => {
+  const handleToggleStatus = useCallback((student: Student) => {
     setStudents((prev) =>
       prev.map((item) =>
         item.id === student.id ? { ...item, status: item.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' } : item
       )
     );
-  };
+  }, []);
 
-  const handleView = (student: Student) => {
+  const handleDelete = useCallback((student: Student) => {
+    setStudentToDelete(student);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (studentToDelete) {
+      setStudents((prev) => prev.filter((item) => item.id !== studentToDelete.id));
+      setIsDeleteModalOpen(false);
+      setStudentToDelete(null);
+    }
+  }, [studentToDelete]);
+
+  const cancelDelete = useCallback(() => {
+    setIsDeleteModalOpen(false);
+    setStudentToDelete(null);
+  }, []);
+
+  const handleView = useCallback((student: Student) => {
     navigate(`/estudantes/${student.id}`);
-  };
+  }, [navigate]);
 
-  const openNewStudent = () => {
+  const openNewStudent = useCallback(() => {
     setEditingStudent(null);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleCsvImport = (importedStudents: Partial<Student>[]) => {
+  const handleCsvImport = useCallback((importedStudents: Partial<Student>[]) => {
     setStudents((prev) => {
       const existingRegistrations = new Set(prev.map(s => s.registration));
       const newStudents = importedStudents
@@ -159,21 +180,29 @@ export default function StudentsPage() {
       return [...prev, ...newStudents];
     });
     setIsCsvImportModalOpen(false);
-  };
+  }, []);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsCsvImportModalOpen(true);
     }
-  };
+  }, []);
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Gestão de Estudantes</h1>
-          <p className="text-slate-500">Cadastre, filtre e visualize os dados dos alunos.</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold"
+          >
+            <FiArrowLeft /> Voltar
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Gestão de Estudantes</h1>
+            <p className="text-slate-500">Cadastre, filtre e visualize os dados dos alunos.</p>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -261,6 +290,8 @@ export default function StudentsPage() {
         onView={handleView}
         onEdit={handleEdit}
         onToggleStatus={handleToggleStatus}
+        onDelete={handleDelete}
+        canDelete={hasRole('GESTOR') || hasRole('ADMIN')}
       />
 
       {isFormOpen && (
@@ -277,6 +308,17 @@ export default function StudentsPage() {
           onImport={handleCsvImport}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        title="Excluir Estudante"
+        message={`Tem certeza que deseja excluir o estudante ${studentToDelete?.name}? Esta ação não pode ser desfeita.`}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 }

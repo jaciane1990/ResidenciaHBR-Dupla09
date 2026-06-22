@@ -1,4 +1,5 @@
-﻿import { memo } from 'react';
+// Memoized StudentTable Component
+import { memo, useMemo } from 'react';
 import { FiEye, FiEdit, FiSlash, FiCheckCircle, FiXCircle, FiTrash2 } from 'react-icons/fi';
 import { Student } from '../types/student';
 
@@ -11,8 +12,8 @@ interface StudentTableProps {
   canDelete?: boolean;
 }
 
-// Row memoizado para evitar re-renders desnecessários de linhas individuais
-const StudentRow = memo(function StudentRow({ 
+// Row Component - Memoizado Individualmente
+const StudentRow = memo(({ 
   student, 
   onView, 
   onEdit, 
@@ -26,7 +27,7 @@ const StudentRow = memo(function StudentRow({
   onToggleStatus: (student: Student) => void;
   onDelete?: (student: Student) => void;
   canDelete?: boolean;
-}) {
+}) => {
   return (
     <tr key={student.id} className="hover:bg-slate-50 transition">
       <td className="px-6 py-4">
@@ -36,7 +37,7 @@ const StudentRow = memo(function StudentRow({
               <img 
                 src={student.photoUrl} 
                 alt={student.name} 
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover" 
                 loading="lazy"
               />
             ) : (
@@ -62,26 +63,26 @@ const StudentRow = memo(function StudentRow({
           </span>
         )}
       </td>
-      <td className="px-6 py-4">
-        <div className="grid grid-cols-2 gap-2">
+      <td className="px-6 py-4 text-center">
+        <div className="flex flex-wrap justify-center gap-2">
           <button
             type="button"
             onClick={() => onView(student)}
-            className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-2xl text-blue-600 hover:text-blue-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
+            className="inline-flex items-center justify-center gap-1 px-3 py-2 min-w-30 rounded-2xl text-blue-600 hover:text-blue-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
           >
             <FiEye className="w-4 h-4" /> Detalhes
           </button>
           <button
             type="button"
             onClick={() => onEdit(student)}
-            className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-2xl text-slate-600 hover:text-slate-900 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
+            className="inline-flex items-center justify-center gap-1 px-3 py-2 min-w-30 rounded-2xl text-slate-600 hover:text-slate-900 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
           >
             <FiEdit className="w-4 h-4" /> Editar
           </button>
           <button
             type="button"
             onClick={() => onToggleStatus(student)}
-            className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-2xl text-amber-600 hover:text-amber-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
+            className="inline-flex items-center justify-center gap-1 px-3 py-2 min-w-30 rounded-2xl text-amber-600 hover:text-amber-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
           >
             <FiSlash className="w-4 h-4" /> {student.status === 'ACTIVE' ? 'Desativar' : 'Ativar'}
           </button>
@@ -89,7 +90,7 @@ const StudentRow = memo(function StudentRow({
             <button
               type="button"
               onClick={() => onDelete(student)}
-              className="inline-flex items-center justify-center gap-1 px-3 py-2 rounded-2xl text-red-600 hover:text-red-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 min-w-30 rounded-2xl text-red-600 hover:text-red-800 text-sm font-semibold border border-slate-200 bg-white hover:bg-slate-50 transition"
             >
               <FiTrash2 className="w-4 h-4" /> Excluir
             </button>
@@ -100,7 +101,16 @@ const StudentRow = memo(function StudentRow({
   );
 });
 
-const StudentTable = memo(function StudentTable({ students, onView, onEdit, onToggleStatus, onDelete, canDelete }: StudentTableProps) {
+StudentRow.displayName = 'StudentRow';
+
+const StudentTable = memo(function StudentTable({ 
+  students, 
+  onView, 
+  onEdit, 
+  onToggleStatus, 
+  onDelete, 
+  canDelete 
+}: StudentTableProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
       <table className="w-full text-left border-collapse">
@@ -141,4 +151,5 @@ const StudentTable = memo(function StudentTable({ students, onView, onEdit, onTo
 });
 
 StudentTable.displayName = 'StudentTable';
+
 export default StudentTable;

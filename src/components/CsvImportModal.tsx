@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiX, FiCheck, FiAlertTriangle, FiDownload } from 'react-icons/fi';
 import { Student } from '../types/student';
 
@@ -20,6 +20,17 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onClose, onImport }) =>
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (step === 'preview' && e.key === 'Enter' && !isProcessing) {
+        processImport();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [step, isProcessing]);
 
   const parseCSV = (text: string): { headers: string[]; data: any[] } => {
     const lines = text.split('\n').filter(line => line.trim());
@@ -54,7 +65,7 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onClose, onImport }) =>
   };
 
   const validateHexCode = (code: string): boolean => {
-    return /^[0-9A-Fa-f]{8,16}$/.test(code);
+    return /^[0-9A-Fa-f]{24}$/.test(code);
   };
 
   const processImport = async () => {
@@ -158,8 +169,8 @@ const CsvImportModal: React.FC<CsvImportModalProps> = ({ onClose, onImport }) =>
 
   const downloadTemplate = () => {
     const csvContent = `name,registration,birthDate,course,grade,biometric1,biometric2,biometric3
-João Silva,2026001,2008-05-15,Ciências Humanas,3º A,ABC123DEF456,DEF789GHI012,GHI345JKL678
-Maria Santos,2026002,2009-03-22,Exatas,2º B,BCD234EFG567,EFG890HIJ123,HIJ456KLM789`;
+João Silva,2026001,2008-05-15,Ciências Humanas,3º A,ABC123DEF456ABC123DEF456,DEF789GHI012DEF789GHI012,GHI345JKL678GHI345JKL678
+Maria Santos,2026002,2009-03-22,Exatas,2º B,BCD234EFG567BCD234EFG567,EFG890HIJ123EFG890HIJ123,HIJ456KLM789HIJ456KLM789`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');

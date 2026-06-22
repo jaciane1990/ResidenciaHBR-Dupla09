@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLogIn, FiUser, FiBriefcase, FiFileText, FiTrendingUp, FiSettings } from 'react-icons/fi';
+import { FiLogIn, FiUser, FiBriefcase, FiFileText, FiTrendingUp, FiSettings, FiEye, FiEyeOff, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useAuth } from '../hooks/useAuth';
 import { UserRole } from '../contexts/AuthContext';
+import { MOCK_USERS } from '../utils/mockData';
 import logoAcesso from '../assets/logoacesso.png';
 
 interface RoleOption {
@@ -59,12 +60,15 @@ const roleOptions: RoleOption[] = [
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const canUsePassword = selectedRole !== 'FISCAL' && selectedRole !== null;
   const canUseGoogle = selectedRole !== null;
@@ -118,6 +122,21 @@ export default function LoginPage() {
     }
   };
 
+  const credentialsByRole = selectedRole
+    ? MOCK_USERS.filter((user) => user.role === selectedRole)
+    : MOCK_USERS;
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedRole) return;
+
+    if (selectedRole === 'FISCAL') {
+      await handleGoogleLogin();
+    } else {
+      await handleLogin();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center px-3 sm:px-4 py-4 sm:py-6">
       <div className="w-full max-w-6xl">
@@ -136,35 +155,67 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Role Cards - Improved grid */}
-        <div className="grid grid-cols-2 min-[480px]:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2 mb-4 sm:mb-6 px-2 sm:px-6 lg:px-0">
-          {roleOptions.map((option) => (
+        {/* Role Dropdown Selector */}
+        <div className="flex justify-center px-2 sm:px-6 lg:px-0 mb-6">
+          <div ref={dropdownRef} className="relative w-full max-w-md">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Selecione o tipo de acesso
+            </label>
             <button
-              key={option.role}
               type="button"
-              onClick={() => {
-                setSelectedRole(option.role);
-                setError('');
-              }}
-              className={`relative group rounded-lg sm:rounded-xl p-1.5 sm:p-2 border transition-all duration-300 flex flex-col items-center justify-center min-h-20 sm:min-h-24 hover:shadow-md ${
-                selectedRole === option.role
-                  ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-300'
-                  : 'border-gray-200 bg-white hover:border-blue-300'
-              }`}
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3 flex items-center justify-between hover:border-blue-400 transition duration-200 focus:outline-none focus:border-blue-500"
             >
-              <div className={`inline-flex items-center justify-center w-8 sm:w-10 h-8 sm:h-10 rounded-lg sm:rounded-xl ${option.color} text-white mb-0.5 sm:mb-1 shadow-sm flex-shrink-0`}>
-                {option.icon}
+              <div className="flex items-center gap-3">
+                {selectedRole ? (
+                  <>
+                    <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${roleOptions.find(r => r.role === selectedRole)?.color} text-white`}>
+                      {roleOptions.find(r => r.role === selectedRole)?.icon}
+                    </div>
+                    <span className="text-gray-900 font-medium">{roleOptions.find(r => r.role === selectedRole)?.title}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500">Escolha um perfil...</span>
+                )}
               </div>
-              <h3 className="text-xs sm:text-sm font-semibold text-gray-900 text-center line-clamp-2 px-0.5">
-                {option.title}
-              </h3>
-              {/* Tooltip */}
-              <div className="pointer-events-none absolute bottom-auto top-full left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center bg-gray-900 text-white text-xs rounded-lg p-2 w-48 shadow-xl z-50 mt-2">
-                <p className="font-semibold mb-1 text-center">{option.title}</p>
-                <p className="leading-tight text-center">{option.description}</p>
-              </div>
+              <svg
+                className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </button>
-          ))}
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-300 rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto">
+                {roleOptions.map((option, index) => (
+                  <button
+                    key={option.role}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(option.role);
+                      setIsDropdownOpen(false);
+                      setError('');
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition duration-150 border-b border-gray-200 last:border-b-0 ${
+                      selectedRole === option.role ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${option.color} text-white shrink-0`}>
+                      {option.icon}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-gray-900 text-sm">{option.title}</p>
+                      <p className="text-xs text-gray-600">{option.description}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Login Panel */}
@@ -184,14 +235,13 @@ export default function LoginPage() {
                   </p>
                 </div>
 
-                {/* Error Message */}
-                {error && (
-                  <div className="mb-3 p-2 sm:p-3 bg-red-50 border border-red-300 rounded-lg">
-                    <p className="text-xs sm:text-sm text-red-700 font-medium">{error}</p>
-                  </div>
-                )}
-
-                <div className="grid gap-2 sm:gap-3">
+                <form onSubmit={handleSubmit} className="grid gap-2 sm:gap-3">
+                  {/* Error Message */}
+                  {error && (
+                    <div className="mb-3 p-2 sm:p-3 bg-red-50 border border-red-300 rounded-lg">
+                      <p className="text-xs sm:text-sm text-red-700 font-medium">{error}</p>
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-0.5 sm:mb-1">
                       Email {selectedRole === 'FISCAL' || selectedRole === 'ADMIN' ? '(Gmail)' : '(Obrigatório)'}
@@ -214,24 +264,34 @@ export default function LoginPage() {
                       <label className="block text-xs font-semibold text-gray-700 mb-0.5 sm:mb-1">
                         Senha (mínimo 6 caracteres)
                       </label>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setError('');
-                        }}
-                        placeholder="••••••••"
-                        disabled={isLoading}
-                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setError('');
+                          }}
+                          placeholder="••••••••"
+                          disabled={isLoading}
+                          className="w-full pr-10 px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-xs disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   )}
 
                   <div className="grid gap-1.5 sm:gap-2 pt-1 sm:pt-2">
                     {canUsePassword && (
                       <button
-                        onClick={handleLogin}
+                        type="submit"
                         disabled={isLoading || !isFormValid}
                         className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-1.5 sm:py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg text-xs"
                       >
@@ -251,6 +311,7 @@ export default function LoginPage() {
 
                     {canUseGoogle && selectedRole === 'FISCAL' && (
                       <button
+                        type="button"
                         onClick={handleGoogleLogin}
                         disabled={isLoading}
                         className="w-full border-2 border-red-500 text-red-600 font-semibold py-1.5 sm:py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2 hover:bg-red-50 disabled:bg-gray-100 disabled:cursor-not-allowed text-xs"
@@ -268,6 +329,7 @@ export default function LoginPage() {
 
                     {canUseGoogle && selectedRole !== 'FISCAL' && (
                       <button
+                        type="button"
                         onClick={handleGoogleLogin}
                         disabled={isLoading}
                         className="w-full border-2 border-gray-300 text-gray-700 font-semibold py-1.5 sm:py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2 hover:bg-gray-100 disabled:bg-gray-100 disabled:cursor-not-allowed text-xs"
@@ -292,6 +354,7 @@ export default function LoginPage() {
 
                   {/* Change Role Button */}
                   <button
+                    type="button"
                     onClick={() => {
                       setSelectedRole(null);
                       setEmail('');
@@ -303,6 +366,41 @@ export default function LoginPage() {
                   >
                     Mudar perfil
                   </button>
+                </form>
+
+                <div className="mt-6 bg-slate-50 rounded-3xl border border-slate-200 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-900">Credenciais de teste</h3>
+                      <p className="text-xs text-slate-500">Use estas credenciais para agilizar o login.</p>
+                    </div>
+                    {selectedRole && (
+                      <span className="px-3 py-1 text-xs font-semibold text-blue-700 bg-blue-100 rounded-full">
+                        {selectedRole}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {credentialsByRole.map((user) => (
+                      <div key={user.id} className="rounded-2xl border border-slate-200 bg-white p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold uppercase tracking-[.2em] text-slate-500">{user.role}</span>
+                          <span className="text-xs text-slate-400">{user.name}</span>
+                        </div>
+                        <p className="text-sm text-slate-700 break-all">
+                          <span className="font-semibold">Email:</span> {user.email}
+                        </p>
+                        <p className="text-sm text-slate-700 break-all">
+                          <span className="font-semibold">Senha:</span> {user.password}</p>
+                        {user.role === 'FISCAL' && (
+                          <p className="mt-2 text-xs text-amber-700">
+                            Obs.: Fiscais usam login via Google, senha não é verificada.
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (

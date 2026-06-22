@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { FiCamera, FiSave, FiX, FiCrop } from 'react-icons/fi';
 import { Student } from '../types/student';
 
@@ -18,7 +18,7 @@ const emptyStudent: Partial<Student> = {
   hasBiometry: false,
 };
 
-export default function StudentForm({ onClose, onSave, student }: StudentFormProps) {
+export default memo(function StudentForm({ onClose, onSave, student }: StudentFormProps) {
   const [formData, setFormData] = useState<Partial<Student>>(student ?? emptyStudent);
   const [photoPreview, setPhotoPreview] = useState<string | null>(student?.photoUrl ?? null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,7 +33,7 @@ export default function StudentForm({ onClose, onSave, student }: StudentFormPro
     }
   }, [student]);
 
-  const cropImage = (imageDataUrl: string) => {
+  const cropImage = useCallback((imageDataUrl: string) => {
     return new Promise<string>((resolve, reject) => {
       const image = new Image();
       image.onload = () => {
@@ -58,9 +58,9 @@ export default function StudentForm({ onClose, onSave, student }: StudentFormPro
       image.onerror = () => reject('Erro ao carregar imagem.');
       image.src = imageDataUrl;
     });
-  };
+  }, []);
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -69,9 +69,9 @@ export default function StudentForm({ onClose, onSave, student }: StudentFormPro
       };
       reader.readAsDataURL(file);
     }
-  };
+  }, []);
 
-  const handleCropPhoto = async () => {
+  const handleCropPhoto = useCallback(async () => {
     if (!photoPreview) return;
     try {
       const cropped = await cropImage(photoPreview);
@@ -79,7 +79,7 @@ export default function StudentForm({ onClose, onSave, student }: StudentFormPro
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [photoPreview, cropImage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -257,4 +257,4 @@ export default function StudentForm({ onClose, onSave, student }: StudentFormPro
       </div>
     </div>
   );
-}
+});
