@@ -36,34 +36,75 @@ O sistema foi desenvolvido para automatizar o controle de entrega de refeições
 6. Sprints 11-12: Validação fiscal, configurações do sistema e deploy final.
 
 ### 🔧 Como Executar o Projeto ###
+**Pré-requisitos:**
+- Node.js v18+ (recomendado)
+- `npm` (vem com o Node.js)
 
-**Pré-requisitos**
-* Node.js instalado.
-* Gerenciador de pacotes (npm ou yarn).
-
-**Instalação**
+**Instalação:**
 1. Clone o repositório:
-   
-``Bash ``
 
-``git clone https://github.com/jaciane1990/ResidenciaHBR-Dupla09``
-
+```bash
+git clone https://github.com/jaciane1990/ResidenciaHBR-Dupla09
+cd ResidenciaHBR-Dupla09-1
+```
 2. Instale as dependências:
-   
-``` Bash ```
 
-``` npm install ```
+```bash
+npm install
+```
 
-3. Configure as variáveis de ambiente (.env):
-   
-```Snippet de código```
+3. (Opcional) Crie um arquivo `.env` na raiz com as variáveis necessárias, por exemplo:
 
-``VITE_API_URL=http://localhost:8000``
+```env
+VITE_API_URL=http://localhost:8000
+VITE_GOOGLE_CLIENT_ID=seu_client_id
+```
 
-``VITE_GOOGLE_CLIENT_ID=seu_client_id``
+**Rodar em desenvolvimento:**
 
-5. Inicie o servidor de desenvolvimento:
-   
-```Bash```
+```bash
+npm run dev
+```
 
-``npm run dev``
+- O Vite exibirá a URL local no terminal (ex.: `http://localhost:5173` ou `http://localhost:5174` se a porta padrão estiver ocupada).
+- Para abrir automaticamente no navegador no Windows:
+
+```powershell
+start http://localhost:5173
+```
+
+**Build e preview (produção):**
+
+```bash
+npm run build
+npm run preview
+```
+
+`npm run preview` serve o build para testar o resultado de produção localmente.
+
+**Lint:**
+
+```bash
+npm run lint
+```
+
+**Dicas de solução de problemas:**
+- Forçar uma porta diferente:
+
+```bash
+npm run dev -- --port 5174
+```
+- Expor a aplicação na rede (acessar por outro dispositivo):
+
+```bash
+npm run dev -- --host
+```
+- Se houver problemas com dependências, remova `node_modules` e `package-lock.json` e reinstale:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+--
+Cole este bloco no README para instruções rápidas de execução.
