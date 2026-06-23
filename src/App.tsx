@@ -1,85 +1,222 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc'; // npm install react-icons
-import { Toaster, toast } from 'react-hot-toast'; // npm install react-hot-toast
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { MockDataDebugPanel } from './components/MockDataDebugPanel';
 
-// --- TIPAGEM (A vantagem do TSX) ---
-type UserRole = 'OPERADOR' | 'FISCAL' | 'ADMIN' | 'EMPRESA';
+// Lazy load das páginas - Carregam sob demanda
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const StudentsPage = lazy(() => import('./pages/StudentsPage'));
+const OperatorPage = lazy(() => import('./pages/OperatorPage'));
+const StudentDetailPage = lazy(() => import('./pages/StudentDetailPage'));
+const OccurrencesPage = lazy(() => import('./pages/OccurrencesPage'));
+const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 
-interface User {
-  name: string;
-  role: UserRole;
-}
+// Componente de loading otimizado
+const PageLoader = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="space-y-4 w-full max-w-md">
+      <div className="flex justify-center">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+      <p className="text-center text-gray-600 font-medium">Carregando página...</p>
+    </div>
+  </div>
+);
 
-// --- COMPONENTE DE LOGIN ---
-const LoginPage = ({ onLogin }: { onLogin: (u: User) => void }) => {
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+// Página de simulação OAuth
+const OAuthSimulationPage = () => {
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
-  const handleManualLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email && pass) {
-      // Simulando login de Operador/Empresa
-      onLogin({ name: "Usuário Cantina", role: 'OPERADOR' });
-      toast.success("Bem-vindo, Operador!");
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    // Simulando login de Fiscal/Admin
-    onLogin({ name: "Fiscal do Estado", role: 'FISCAL' });
-    toast.success("Acesso autorizado via Google");
+  const handleSimulateLogin = () => {
+    setIsProcessing(true);
+    // Simular delay do OAuth
+    setTimeout(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const state = urlParams.get('state') || '';
+      const callbackUrl = `${window.location.origin}/oauth/callback?code=demo-oauth-code-123&state=${state}`;
+      window.location.href = callbackUrl;
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="bg-white shadow-2xl rounded-3xl flex flex-col md:flex-row max-w-4xl overflow-hidden">
-        
-        {/* Lado Esquerdo: Branding */}
-        <div className="bg-blue-600 p-12 text-white flex flex-col justify-center md:w-5/12">
-          <h1 className="text-4xl font-bold mb-4">Voucher Escolar 🍎</h1>
-          <p className="text-blue-100">Sistema de controle de acesso e monitoramento nutricional.</p>
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* Header simulando Google */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+            <span className="text-white font-bold text-xl">G</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Google</h1>
+            <p className="text-sm text-gray-600">accounts.google.com</p>
+          </div>
         </div>
 
-        {/* Lado Direito: Formulário */}
-        <div className="p-12 md:w-7/12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Acesse sua conta</h2>
-          
-          <form onSubmit={handleManualLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email ou Matrícula</label>
-              <input 
-                type="text" 
-                className="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                placeholder="Ex: 2024001"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Senha</label>
-              <input 
-                type="password" 
-                className="w-full mt-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition"
-                placeholder="••••••••"
-                onChange={(e) => setPass(e.target.value)}
-              />
-            </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
-              Entrar
-            </button>
-          </form>
+        {/* Card de login simulado */}
+        <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-lg">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+            Fazer login no Sistema de Acesso
+          </h2>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-gray-200"></span></div>
-            <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">Ou continue com</span></div>
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700 mb-2">
+                <strong>Email:</strong> fiscal@teste.com
+              </p>
+              <p className="text-sm text-gray-700">
+                <strong>Permissões solicitadas:</strong> Email, Perfil
+              </p>
+            </div>
           </div>
 
-          <button 
-            onClick={handleGoogleLogin}
-            className="w-full border-2 border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-xl flex items-center justify-center gap-3 transition"
+          <div className="space-y-3">
+            <button
+              onClick={handleSimulateLogin}
+              disabled={isProcessing}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+            >
+              {isProcessing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Autorizando...
+                </>
+              ) : (
+                <>
+                  <span className="text-white font-bold text-lg mr-1">G</span>
+                  Continuar como Fiscal João Santos
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => window.history.back()}
+              className="w-full text-gray-600 hover:text-gray-800 font-medium py-2 px-4 rounded-lg transition"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-500 text-center">
+              Esta é uma simulação do login Google OAuth para fins de demonstração.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Página de callback OAuth
+const OAuthCallbackPage = () => {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const [status, setStatus] = React.useState<'processing' | 'success' | 'error'>('processing');
+  const [message, setMessage] = React.useState('Processando autenticação...');
+
+  React.useEffect(() => {
+    const handleCallback = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (!code) {
+          setStatus('error');
+          setMessage('Código de autorização não encontrado.');
+          return;
+        }
+
+        // Simular processamento do OAuth
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Fazer login como FISCAL via OAuth
+        await signIn({ email: 'fiscal@teste.com', role: 'FISCAL', method: 'GOOGLE' });
+        
+        setStatus('success');
+        setMessage('Autenticação realizada com sucesso!');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } catch (error) {
+        setStatus('error');
+        setMessage('Erro durante a autenticação.');
+      }
+    };
+
+    handleCallback();
+  }, [signIn, navigate]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white border border-gray-300 rounded-lg p-8 shadow-lg text-center">
+          {status === 'processing' && (
+            <>
+              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Autenticando...</h2>
+              <p className="text-gray-600">{message}</p>
+            </>
+          )}
+
+          {status === 'success' && (
+            <>
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Sucesso!</h2>
+              <p className="text-gray-600">{message}</p>
+            </>
+          )}
+
+          {status === 'error' && (
+            <>
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Erro na Autenticação</h2>
+              <p className="text-gray-600 mb-4">{message}</p>
+              <button
+                onClick={() => navigate('/login')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+              >
+                Voltar ao Login
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Página de erro de autorização
+const UnauthorizedPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white border border-gray-300 rounded-lg p-8 shadow-lg text-center">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Acesso Negado</h2>
+          <p className="text-gray-600 mb-6">
+            Você não tem permissão para acessar esta página.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
-            <FcGoogle size={24} />
-            Entrar com Google (Fiscais/Admin)
+            Voltar ao Dashboard
           </button>
         </div>
       </div>
@@ -87,45 +224,126 @@ const LoginPage = ({ onLogin }: { onLogin: (u: User) => void }) => {
   );
 };
 
-// --- COMPONENTE DE DASHBOARD (PROTEGIDO) ---
-const Dashboard = ({ user, logout }: { user: User, logout: () => void }) => (
-  <div className="p-10">
-    <div className="bg-white p-8 rounded-2xl shadow-md border border-gray-100">
-      <h1 className="text-3xl font-bold">Olá, {user.name}! 👋</h1>
-      <p className="text-gray-600">Seu papel no sistema é: <span className="font-bold text-blue-600">{user.role}</span></p>
-      <button 
-        onClick={logout}
-        className="mt-6 bg-red-100 text-red-600 px-6 py-2 rounded-lg font-bold hover:bg-red-200 transition"
-      >
-        Sair do Sistema
-      </button>
-    </div>
-  </div>
-);
-
-// --- APP PRINCIPAL COM ROTAS ---
-export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-
-  const logout = () => setUser(null);
-
+function App() {
   return (
-    <BrowserRouter>
-      <Toaster position="top-right" />
-      <Routes>
-        <Route 
-          path="/login" 
-          element={!user ? <LoginPage onLogin={setUser} /> : <Navigate to="/" />} 
-        />
+    <AuthProvider>
+      <BrowserRouter>
+        {/* Debug Panel - apenas em desenvolvimento */}
+        {false && <MockDataDebugPanel />}
         
-        <Route 
-          path="/" 
-          element={user ? <Dashboard user={user} logout={logout} /> : <Navigate to="/login" />} 
-        />
-        
-        {/* Rota para erro 404 */}
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </BrowserRouter>
+        <Routes>
+          {/* Rota pública de login */}
+          <Route 
+            path="/login" 
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <LoginPage />
+              </Suspense>
+            } 
+          />
+
+          {/* Simulação OAuth */}
+          <Route path="/oauth/simulate" element={<OAuthSimulationPage />} />
+
+          {/* Callback OAuth */}
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+
+          {/* Página de erro de autorização */}
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          {/* Dashboard - acessível para todos os usuários logados */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoader />}>
+                  <DashboardPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gestão de estudantes - apenas para GESTOR e ADMIN */}
+          <Route
+            path="/estudantes"
+            element={
+              <ProtectedRoute requiredRoles={['GESTOR', 'ADMIN']}>
+                <Suspense fallback={<PageLoader />}>
+                  <StudentsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Detalhes do estudante - acessível para todos os usuários logados */}
+          <Route
+            path="/estudantes/:id"
+            element={
+              <ProtectedRoute>
+                <Suspense fallback={<PageLoader />}>
+                  <StudentDetailPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Página do operador - apenas para OPERADOR */}
+          <Route
+            path="/operador"
+            element={
+              <ProtectedRoute requiredRoles={['OPERADOR']}>
+                <Suspense fallback={<PageLoader />}>
+                  <OperatorPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Página de liberação de alunos */}
+          <Route
+            path="/liberar-alunos"
+            element={
+              <ProtectedRoute requiredRoles={['OPERADOR']}>
+                <Suspense fallback={<PageLoader />}>
+                  <OperatorPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Página de ocorrências */}
+          <Route
+            path="/ocorrencias"
+            element={
+              <ProtectedRoute requiredRoles={['OPERADOR', 'EMPRESA', 'GESTOR', 'ADMIN']}>
+                <Suspense fallback={<PageLoader />}>
+                  <OccurrencesPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Página de relatórios */}
+          <Route
+            path="/relatorios"
+            element={
+              <ProtectedRoute requiredRoles={['EMPRESA', 'GESTOR', 'ADMIN']}>
+                <Suspense fallback={<PageLoader />}>
+                  <ReportsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Redirecionamento padrão */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Rota catch-all */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
+
+export default App;
